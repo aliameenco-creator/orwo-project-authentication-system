@@ -44,10 +44,8 @@ export interface Trailer {
 export interface Film {
   title: string;
   duration: number; // seconds
-  /** Uploaded master, or a private link from a streaming host (Vimeo, Mux, Frame.io…). */
-  source: "upload" | "link";
-  url?: string;
-  fileName?: string;
+  /** Private link from a streaming host (Vimeo, Mux, Frame.io…). Never shown to viewers. */
+  url: string;
 }
 
 export interface Project {
@@ -63,7 +61,7 @@ export interface Project {
   posters: Poster[];
   trailers: Trailer[];
   film?: Film;
-  /** Real cover image (e.g. page 1 of the deck). Falls back to generated key art. */
+  /** Real cover / key-art image. Falls back to generated key art. Never a PDF page. */
   cover?: string;
   updatedAt: string;
 }

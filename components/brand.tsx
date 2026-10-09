@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-/** Orwo Family wordmark (stacked "ORWO / FAMILY"). Black on light surfaces, white on dark. */
+/** Orwo wordmark (stacked "OR / WO"). Black on light surfaces, white on dark. */
 export function Logo({ height = 44, tone = "dark", className }: { height?: number; tone?: "dark" | "light"; className?: string }) {
   return (
     // eslint-disable-next-line @next/next/no-img-element
@@ -8,7 +8,7 @@ export function Logo({ height = 44, tone = "dark", className }: { height?: numbe
       src={tone === "dark" ? "/orwo-logo-black.png" : "/orwo-logo-white.png"}
       alt="Orwo Family"
       height={height}
-      width={Math.round(height * (364 / 480))}
+      width={Math.round(height * (516 / 400))}
       style={{ height, width: "auto" }}
       className={cn("shrink-0 select-none", className)}
       draggable={false}
@@ -27,12 +27,12 @@ export function LogoMark({ size = 36, className }: { size?: number; className?: 
       )}
     >
       <span className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/15 to-transparent" />
-      <Logo height={Math.round(size * 0.66)} tone="light" />
+      <Logo height={Math.round(size * 0.48)} tone="light" />
     </span>
   );
 }
 
-export function Brand({ tagline, height = 44, className }: { tagline?: string; height?: number; className?: string }) {
+export function Brand({ tagline, height = 34, className }: { tagline?: string; height?: number; className?: string }) {
   return (
     <div className={cn("flex items-center gap-3.5", className)}>
       <Logo height={height} />

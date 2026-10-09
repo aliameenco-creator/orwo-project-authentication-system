@@ -7,7 +7,6 @@ import {
   Eye,
   EyeOff,
   FileText,
-  Film as FilmIcon,
   Link2,
   GripVertical,
   ImagePlus,
@@ -175,15 +174,9 @@ export function ProjectForm({ initial }: { initial?: Project }) {
   const [filmLink, setFilmLink] = useState("");
   const filmTitle = () => `${p.title.trim() || "Untitled"} — Feature`;
 
-  function addFilmFile(files: File[]) {
-    const f = files[0]!;
-    set("film", { title: filmTitle(), duration: 5400 + Math.floor(Math.random() * 2400), source: "upload", fileName: f.name });
-    startUpload(["film"]);
-  }
-
   function addFilmLink() {
     if (!/^https?:\/\/\S+$/.test(filmLink.trim())) return toast("Paste a full https:// link");
-    set("film", { title: filmTitle(), duration: 6000, source: "link", url: filmLink.trim() });
+    set("film", { title: filmTitle(), duration: 6000, url: filmLink.trim() });
     setFilmLink("");
   }
 
@@ -379,11 +372,11 @@ export function ProjectForm({ initial }: { initial?: Project }) {
           </Section>
 
           {/* Full film */}
-          <Section title="Full film" subtitle="The complete cut. Only viewers you explicitly include can watch it.">
+          <Section title="Full film" subtitle="Add a private link to the complete cut. Only viewers you explicitly include can watch it.">
             {p.film ? (
               <div className="flex items-center gap-3 rounded-2xl bg-white/75 p-3 ring-1 ring-black/[0.04]">
                 <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-ink text-white">
-                  {p.film.source === "link" ? <Link2 size={18} /> : <FilmIcon size={18} />}
+                  <Link2 size={18} />
                 </span>
                 <div className="min-w-0 flex-1">
                   <input
@@ -392,40 +385,31 @@ export function ProjectForm({ initial }: { initial?: Project }) {
                     className="w-full rounded-lg bg-transparent px-1 py-0.5 text-sm font-medium outline-none focus:bg-white focus:ring-2 focus:ring-accent/15"
                     aria-label="Film title"
                   />
-                  {isUploading("film") ? (
-                    <div className="mt-1.5 px-1">
-                      <ProgressBar value={progress.film!} />
-                    </div>
-                  ) : (
-                    <div className="truncate px-1 text-xs text-ink-muted">
-                      {p.film.source === "link" ? p.film.url : p.film.fileName} · {formatRuntime(p.film.duration)} · Stream only
-                    </div>
-                  )}
+                  <div className="truncate px-1 text-xs text-ink-muted">
+                    {p.film.url} · {formatRuntime(p.film.duration)} · Stream only
+                  </div>
                 </div>
                 <IconButton label="Remove film" onClick={() => set("film", undefined)} className="hover:text-red-600">
                   <Trash size={15} />
                 </IconButton>
               </div>
             ) : (
-              <div className="grid gap-4 md:grid-cols-2">
-                <UploadDrop accept="video/*" onFiles={addFilmFile} icon={<FilmIcon size={18} />} title="Upload the film" hint="MP4 / MOV master · streamed, never downloadable" />
-                <div className="flex flex-col justify-center rounded-3xl bg-white/40 p-5 ring-1 ring-black/[0.05]">
-                  <div className="flex items-center gap-2 text-sm font-medium">
-                    <Link2 size={16} /> Or use a private link
-                  </div>
-                  <p className="mt-1 text-xs text-ink-muted">Vimeo, Mux, Frame.io… The link stays hidden from viewers.</p>
-                  <div className="mt-3 flex gap-2">
-                    <Input
-                      value={filmLink}
-                      onChange={(e) => setFilmLink(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addFilmLink())}
-                      placeholder="https://vimeo.com/…"
-                      className="h-10 text-sm"
-                    />
-                    <Button size="sm" className="h-10" onClick={addFilmLink}>
-                      Add
-                    </Button>
-                  </div>
+              <div className="rounded-3xl bg-white/40 p-5 ring-1 ring-black/[0.05]">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <Link2 size={16} /> Private film link
+                </div>
+                <p className="mt-1 text-xs text-ink-muted">Vimeo, Mux, Frame.io… The link itself stays hidden from viewers.</p>
+                <div className="mt-3 flex gap-2">
+                  <Input
+                    value={filmLink}
+                    onChange={(e) => setFilmLink(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addFilmLink())}
+                    placeholder="https://vimeo.com/…"
+                    className="h-10 text-sm"
+                  />
+                  <Button size="sm" className="h-10" onClick={addFilmLink}>
+                    Add
+                  </Button>
                 </div>
               </div>
             )}

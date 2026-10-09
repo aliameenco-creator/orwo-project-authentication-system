@@ -51,7 +51,7 @@ export default function ViewerLayout({ children }: { children: React.ReactNode }
       <header className="sticky top-0 z-30 px-4 pt-4 sm:px-8" style={session.preview ? { top: 36 } : undefined}>
         <div className="glass mx-auto flex h-16 max-w-[1180px] items-center gap-3 rounded-full pr-2.5 pl-3 sm:pl-4">
           <Link href="/viewer" className="flex items-center">
-            <Brand height={40} className="hidden sm:flex" />
+            <Brand height={30} className="hidden sm:flex" />
             <LogoMark size={34} className="sm:hidden" />
           </Link>
           <div className="ml-auto flex items-center gap-2.5 rounded-full py-1 pr-1 pl-1 sm:pl-3">

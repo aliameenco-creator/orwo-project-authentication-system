@@ -22,7 +22,6 @@ export function createMockProjects(): Project[] {
       year: 2027,
       status: "Active",
       palette: { from: "#3a2a12", via: "#b8893a", to: "#f3e6c8", glow: "#d8b26a" },
-      cover: "/demo-pages/celine-paris/page-01.jpg",
       pdfs: [
         {
           id: "cp-1",
@@ -65,7 +64,7 @@ export function createMockProjects(): Project[] {
         { id: "el-t1", title: "Official Teaser", duration: 94 },
         { id: "el-t2", title: "Mood Reel", duration: 152 },
       ],
-      film: { title: "Echo Line — Festival Cut", duration: 6492, source: "upload", fileName: "EchoLine_FestivalCut_v7_ProRes.mov" },
+      film: { title: "Echo Line — Festival Cut", duration: 6492, url: "https://vimeo.com/private/echo-line-festival-cut" },
       updatedAt: daysFromNow(-2),
     },
     {
@@ -88,7 +87,7 @@ export function createMockProjects(): Project[] {
         { id: "lh-p2", title: "Station Teaser", variant: 0 },
       ],
       trailers: [{ id: "lh-t1", title: "Announcement Trailer", duration: 131 }],
-      film: { title: "The Last Horizon — Rough Cut", duration: 7215, source: "link", url: "https://vimeo.com/private/the-last-horizon-rc2" },
+      film: { title: "The Last Horizon — Rough Cut", duration: 7215, url: "https://vimeo.com/private/the-last-horizon-rc2" },
       updatedAt: daysFromNow(-1),
     },
     {

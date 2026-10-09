@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, Clapperboard, EyeOff, FileText, Film, Link2, Upload, Image as ImageIcon, KeyRound, Pencil, Presentation, UserPlus } from "lucide-react";
+import { ArrowLeft, Clapperboard, EyeOff, FileText, Film, Link2, Image as ImageIcon, KeyRound, Pencil, Presentation, UserPlus } from "lucide-react";
 import { useState } from "react";
 import { useStore } from "@/lib/store";
 import type { PdfDoc, Project } from "@/lib/types";
@@ -233,12 +233,12 @@ function FilmAccess({ project }: { project: Project }) {
         <div className="text-[11px] font-semibold tracking-wider text-ink-muted uppercase">Source</div>
         <div className="mt-3 flex items-center gap-3">
           <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-ink text-white">
-            {film.source === "link" ? <Link2 size={17} /> : <Upload size={17} />}
+            <Link2 size={17} />
           </span>
           <div className="min-w-0">
-            <div className="truncate text-sm font-medium">{film.source === "link" ? film.url : film.fileName}</div>
+            <div className="truncate text-sm font-medium">{film.url}</div>
             <div className="text-xs text-ink-muted">
-              {film.source === "link" ? "Private streaming link" : "Uploaded master"} · {formatRuntime(film.duration)}
+              Private streaming link · {formatRuntime(film.duration)}
             </div>
           </div>
         </div>

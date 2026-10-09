@@ -45,7 +45,7 @@ PDFs and generated page images are git-ignored, so confidential decks are never 
 
 ## Full film
 
-Each project can have a full film, either an uploaded master or a private streaming link (Vimeo, Mux, Frame.io…). It's the most sensitive asset, so it's **opt-in per invitation**. Only viewers whose invitation includes the film see a Film tab, and their email drifts across the picture while it plays. Playback is simulated in this prototype. Production would use DRM streaming with signed, expiring tokens.
+Each project can have a full film, added as a private streaming link (Vimeo, Mux, Frame.io…). Films aren't uploaded. It's the most sensitive asset, so it's **opt-in per invitation**. Only viewers whose invitation includes the film see a Film tab, and their email drifts across the picture while it plays. Playback is simulated in this prototype. Production would use DRM streaming with signed, expiring tokens.
 
 ## Also included
 

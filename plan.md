@@ -33,6 +33,11 @@
 - The supplied deck `CÉLINE — PARIS.pdf` (35 MB → 14 JPEGs, 2.1 MB) stays local: `*.pdf` and `public/demo-pages/` are git-ignored. On a fresh clone, run the convert script or the Céline project falls back to generated art and "Page unavailable".
 - Store key bumped to `orwo-family:v2` (shape changed).
 
+**Round 4 (done):**
+- Project cards never use a PDF page as the thumbnail. Céline — Paris uses generated key art like the others (`store.migrate()` strips old `/demo-pages/` covers from saved data). Real covers should come from poster uploads.
+- Full film is **private link only** (no upload). `Film` = `{ title, duration, url }`. Older saved films without a url are migrated.
+- Logo is the "OR / WO" mark only. "FAMILY" was cropped off the supplied artwork (`public/orwo-logo-*.png` are 516×400, plus `app/icon.png`).
+
 Possible next steps (not started; pick up here if continuing):
 - Phase 2 backend: real auth (email invite tokens with expiry, hashed passwords, password reset), private storage, server-side page rendering with burned-in watermark, signed URLs, DRM video (Mux / Cloudflare Stream).
 - Real poster/trailer images (currently generated art).

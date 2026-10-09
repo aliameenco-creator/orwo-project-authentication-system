@@ -47,6 +47,22 @@ interface StoreValue extends PersistedState {
 
 const StoreContext = createContext<StoreValue | null>(null);
 
+/** Cleans up demo data saved by earlier prototype versions. */
+function migrate(state: PersistedState): PersistedState {
+  const fallbackUrl: Record<string, string> = { "echo-line": "https://vimeo.com/private/echo-line-festival-cut" };
+  return {
+    ...state,
+    projects: state.projects.map((p) => {
+      const next = { ...p };
+      // PDF pages were briefly used as card covers.
+      if (next.cover?.startsWith("/demo-pages/")) delete next.cover;
+      // Films used to allow file uploads; they're private links only now.
+      if (next.film && !next.film.url) next.film = { ...next.film, url: fallbackUrl[p.id] ?? "https://vimeo.com/private/" + p.id };
+      return next;
+    }),
+  };
+}
+
 function initialState(): PersistedState {
   return { projects: createMockProjects(), grants: createMockGrants(), accounts: createMockAccounts(), session: null };
 }
@@ -59,7 +75,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setState(JSON.parse(raw) as PersistedState);
+      if (raw) setState(migrate(JSON.parse(raw) as PersistedState));
     } catch {
       /* ignore corrupt storage */
     }

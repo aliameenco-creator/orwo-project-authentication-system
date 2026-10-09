@@ -7,7 +7,7 @@ export function AuthLayout({ title, subtitle, children, footer }: { title: strin
     <main className="flex min-h-screen flex-col items-center justify-center px-5 py-12">
       <div className="w-full max-w-[400px] animate-fade-up">
         <div className="mb-10 flex justify-center">
-          <Logo height={72} />
+          <Logo height={56} />
         </div>
         <div className="glass-strong rounded-[32px] p-7 sm:p-8">
           <h1 className="text-[26px] leading-tight font-semibold tracking-[-0.03em]">{title}</h1>
