@@ -1,11 +1,11 @@
 "use client";
 
-import { Lock } from "lucide-react";
+import { FolderOpen } from "lucide-react";
 import { useParams } from "next/navigation";
 import { ProjectView } from "@/components/project-view";
 import { ButtonLink, EmptyState, GlassCard } from "@/components/ui";
 import { useStore } from "@/lib/store";
-import { expiryLabel, isGrantLive, viewerAccess } from "@/lib/utils";
+import { isGrantLive, viewerAccess } from "@/lib/utils";
 
 export default function ViewerProjectPage() {
   const { id } = useParams<{ id: string }>();
@@ -20,13 +20,13 @@ export default function ViewerProjectPage() {
     return (
       <GlassCard className="mx-auto mt-10 max-w-lg">
         <EmptyState
-          icon={<Lock size={22} />}
-          title={grant ? "Your access has ended" : "This project isn't shared with you"}
-          body={grant ? `${expiryLabel(grant)}. Contact Jake if you need more time.` : "Only projects shared with your email can be viewed."}
-          action={<ButtonLink href="/viewer">Back to shared projects</ButtonLink>}
+          icon={<FolderOpen size={22} />}
+          title="This project isn't available"
+          body="If you think this is a mistake, please contact Jake."
+          action={<ButtonLink href="/viewer">Back to projects</ButtonLink>}
         />
       </GlassCard>
     );
 
-  return <ProjectView project={project} mode="viewer" backHref="/viewer" grant={grant} watermark={session.email} />;
+  return <ProjectView project={project} mode="viewer" backHref="/viewer" watermark={session.email} />;
 }

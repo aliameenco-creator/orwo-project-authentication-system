@@ -1,5 +1,22 @@
 import { cn } from "@/lib/utils";
 
+/** Orwo Family wordmark (stacked "ORWO / FAMILY"). Black on light surfaces, white on dark. */
+export function Logo({ height = 44, tone = "dark", className }: { height?: number; tone?: "dark" | "light"; className?: string }) {
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={tone === "dark" ? "/orwo-logo-black.png" : "/orwo-logo-white.png"}
+      alt="Orwo Family"
+      height={height}
+      width={Math.round(height * (364 / 480))}
+      style={{ height, width: "auto" }}
+      className={cn("shrink-0 select-none", className)}
+      draggable={false}
+    />
+  );
+}
+
+/** Compact app-icon version: white wordmark on a dark rounded tile. */
 export function LogoMark({ size = 36, className }: { size?: number; className?: string }) {
   return (
     <span
@@ -9,29 +26,17 @@ export function LogoMark({ size = 36, className }: { size?: number; className?: 
         className,
       )}
     >
-      <span className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/20 to-transparent" />
-      <svg viewBox="0 0 24 24" width={size * 0.56} height={size * 0.56} fill="none">
-        <circle cx="12" cy="12" r="8" stroke="white" strokeWidth="2.2" />
-        <circle cx="12" cy="12" r="3" fill="url(#lg)" />
-        <defs>
-          <linearGradient id="lg" x1="9" y1="9" x2="15" y2="15">
-            <stop stopColor="#8fb4ff" />
-            <stop offset="1" stopColor="#f0abfc" />
-          </linearGradient>
-        </defs>
-      </svg>
+      <span className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/15 to-transparent" />
+      <Logo height={Math.round(size * 0.66)} tone="light" />
     </span>
   );
 }
 
-export function Brand({ tagline = true, className }: { tagline?: boolean; className?: string }) {
+export function Brand({ tagline, height = 44, className }: { tagline?: string; height?: number; className?: string }) {
   return (
-    <div className={cn("flex items-center gap-3", className)}>
-      <LogoMark />
-      <div className="leading-tight">
-        <div className="text-[17px] font-semibold tracking-[-0.02em]">Orwo Family</div>
-        {tagline && <div className="text-[11.5px] text-ink-muted">Create and manage our projects privately</div>}
-      </div>
+    <div className={cn("flex items-center gap-3.5", className)}>
+      <Logo height={height} />
+      {tagline && <div className="max-w-[140px] text-[11.5px] leading-snug text-ink-muted">{tagline}</div>}
     </div>
   );
 }

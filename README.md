@@ -32,7 +32,7 @@ All changes (new projects, invites, extensions, revocations) are saved in your b
 - **Project detail**: Presentations, Posters, Trailers and Access tabs.
 - **In-page PDF viewer**: stacked pages, thumbnails, zoom, and a watermark with the viewer's email. Right-click, Ctrl/⌘+S and Ctrl/⌘+P are blocked.
 - **Access management**: invite by email with 1, 3, 7 or custom days of access, plus Extend, Revoke, Reinstate and Copy Link. Access expires automatically when the time runs out.
-- **Viewer portal**: only shared projects, an "Access expires in X days" countdown, no admin controls, and no download actions. Expired or unshared projects are blocked.
+- **Viewer portal**: a clean, discreet view of only the shared projects, with no admin controls, protection badges, expiry countdowns or download actions. Expired or unshared projects quietly disappear.
 - **Viewers directory and Settings**.
 
 ## Project layout

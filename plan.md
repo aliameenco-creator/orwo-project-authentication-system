@@ -20,7 +20,13 @@
 ### NEXT UP
 **Phase 1 prototype is complete** (build passes; every flow clicked through in Edge via a Playwright script, 0 console errors). Pushed to https://github.com/aliameenco-creator/orwo-project-authentication-system
 
+**Round 2 feedback (done):**
+- Viewer side is now *discreet*: no "View Only" / "Protected Access" badges, no "Access controlled by Orwo Family" banner or footnote, no expiry countdown, and no "Access ended" section (expired projects just disappear). Blocked links show a neutral "This project isn't available". Right-click/Ctrl+S/Ctrl+P are still blocked, silently. The watermark shows only the viewer's email. Owner pages keep all protection badges.
+- Real Orwo Family logo: `public/orwo-logo-black.png` (light UI) and `public/orwo-logo-white.png` (dark surfaces), generated from the supplied white-on-transparent webp. `app/icon.png` is the favicon. `components/brand.tsx` exports `Logo`, `LogoMark`, `Brand`.
+- The tagline "Create and manage our projects privately" only appears in Jake's sidebar, never to viewers.
+
 Possible next steps (not started; pick up here if continuing):
+- **Real PDF → pages.** Recommended production approach: on upload, the server rasterises each page to an image (pdftoppm/Poppler, MuPDF or Ghostscript, typically in a background job). The images are stored privately, the original PDF is never sent to the browser, and pages are served through short-lived signed URLs, optionally with the viewer's email watermark burned in server-side. Prototype option: render the uploaded PDF in the browser with `pdfjs-dist` to real page images so the demo shows the actual document.
 - Real poster/trailer previews: keep the uploaded image as an object URL / base64 in the store instead of generated art.
 - Persist Settings (name, protection toggles, default duration) in the store; make InviteForm use the default duration.
 - Notifications are static mock data in `components/admin-shell.tsx`; derive them from grants.
@@ -33,6 +39,7 @@ Possible next steps (not started; pick up here if continuing):
 - Mock dates are relative to "now" (`daysFromNow`) so "expires in 2 days" always reads correctly on first load.
 - Posters are generated art (`components/poster-art.tsx`), not image files.
 - Login: "Owner" tab (any password) → /dashboard; "Invited viewer" tab → only emails with a grant → /viewer. Demo viewer: sarah.chen@northlightfilms.com.
+- `ProjectView`, `PdfViewer`, `PosterGallery` and `TrailerPlayer` take `discreet` (= viewer mode) to hide all protection messaging.
 - Owner can "Preview viewer portal" (session.preview = true) and return to owner view. `app/viewer/layout.tsx` uses a `leaving` ref so its guard doesn't hijack the "Return to owner view" redirect.
 - Animations use `animation-fill-mode: backwards` (not `both`). `both` keeps `transform` set after the animation and breaks hover lifts and positioned transforms.
 - Don't hand-write `-webkit-backdrop-filter` in globals.css. Tailwind v4/Lightning CSS then drops the unprefixed property and Chrome/Edge lose the blur. Lightning CSS adds the prefix itself.

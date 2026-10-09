@@ -1,10 +1,10 @@
 "use client";
 
-import { ArrowLeft, Clapperboard, EyeOff, FileText, Hourglass, Image as ImageIcon, KeyRound, Pencil, Presentation, UserPlus } from "lucide-react";
+import { ArrowLeft, Clapperboard, EyeOff, FileText, Image as ImageIcon, KeyRound, Pencil, Presentation, UserPlus } from "lucide-react";
 import { useState } from "react";
 import { useStore } from "@/lib/store";
-import type { AccessGrant, PdfDoc, Project } from "@/lib/types";
-import { cn, daysUntil, expiryLabel, formatRelative } from "@/lib/utils";
+import type { PdfDoc, Project } from "@/lib/types";
+import { formatRelative } from "@/lib/utils";
 import { AccessList } from "./access-list";
 import { NoDownloadsNote, ProjectStatusBadge, ProtectedBadge, ViewOnlyBadge } from "./badges";
 import { InviteForm } from "./invite-form";
@@ -20,14 +20,11 @@ export function ProjectView({
   project,
   mode,
   backHref,
-  grant,
   watermark,
 }: {
   project: Project;
   mode: "admin" | "viewer";
   backHref: string;
-  /** Viewer's grant — drives the expiry banner. */
-  grant?: AccessGrant;
   watermark?: string;
 }) {
   const { grantsForProject } = useStore();
@@ -49,7 +46,7 @@ export function ProjectView({
   return (
     <>
       <ButtonLink href={backHref} variant="ghost" size="sm" className="-ml-3 mb-4">
-        <ArrowLeft size={15} /> {admin ? "Projects" : "Shared with you"}
+        <ArrowLeft size={15} /> {admin ? "Projects" : "All projects"}
       </ButtonLink>
 
       {/* Header */}
@@ -64,8 +61,12 @@ export function ProjectView({
           </div>
           <div className="flex flex-col px-2 pb-3 md:py-4 md:pr-4">
             <div className="flex flex-wrap items-center gap-2">
-              {admin ? <ProjectStatusBadge status={project.status} /> : <ViewOnlyBadge />}
-              <ProtectedBadge />
+              {admin && (
+                <>
+                  <ProjectStatusBadge status={project.status} />
+                  <ProtectedBadge />
+                </>
+              )}
               <span className="text-xs text-ink-muted">
                 {project.genre} · {project.year}
               </span>
@@ -74,30 +75,17 @@ export function ProjectView({
             <p className="mt-2 text-[16px] text-ink-soft">{project.description}</p>
             <p className="mt-4 max-w-2xl text-[14px] leading-relaxed text-ink-muted">{project.summary}</p>
 
-            <div className="mt-auto flex flex-wrap items-center gap-3 pt-6">
-              {admin ? (
-                <>
-                  <Button onClick={() => setInviting(true)}>
-                    <UserPlus size={16} /> Invite Viewer
-                  </Button>
-                  <ButtonLink href={`/projects/${project.id}/edit`} variant="secondary">
-                    <Pencil size={15} /> Edit Project
-                  </ButtonLink>
-                  <span className="text-xs text-ink-muted">Updated {formatRelative(project.updatedAt)}</span>
-                </>
-              ) : (
-                grant && (
-                  <span
-                    className={cn(
-                      "inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium",
-                      daysUntil(grant.expiryDate) <= 2 ? "bg-amber-500/12 text-amber-700" : "bg-black/[0.04] text-ink-soft",
-                    )}
-                  >
-                    <Hourglass size={15} /> {expiryLabel(grant)}
-                  </span>
-                )
-              )}
-            </div>
+            {admin && (
+              <div className="mt-auto flex flex-wrap items-center gap-3 pt-6">
+                <Button onClick={() => setInviting(true)}>
+                  <UserPlus size={16} /> Invite Viewer
+                </Button>
+                <ButtonLink href={`/projects/${project.id}/edit`} variant="secondary">
+                  <Pencil size={15} /> Edit Project
+                </ButtonLink>
+                <span className="text-xs text-ink-muted">Updated {formatRelative(project.updatedAt)}</span>
+              </div>
+            )}
           </div>
         </div>
       </GlassCard>
@@ -109,7 +97,7 @@ export function ProjectView({
           (pdfs.length ? (
             <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
               {pdfs.map((d, i) => (
-                <PdfCard key={d.id} doc={d} project={project} index={i} onOpen={() => setDoc(d)} showHidden={admin} />
+                <PdfCard key={d.id} doc={d} project={project} index={i} onOpen={() => setDoc(d)} admin={admin} />
               ))}
             </div>
           ) : (
@@ -120,13 +108,13 @@ export function ProjectView({
 
         {tab === "posters" && (
           <GlassCard className="p-5 sm:p-7">
-            <PosterGallery project={project} watermark={watermark} />
+            <PosterGallery project={project} watermark={watermark} discreet={!admin} />
           </GlassCard>
         )}
 
         {tab === "trailers" && (
           <GlassCard className="p-4 sm:p-6">
-            <TrailerPlayer project={project} watermark={watermark} />
+            <TrailerPlayer project={project} watermark={watermark} discreet={!admin} />
           </GlassCard>
         )}
 
@@ -145,10 +133,10 @@ export function ProjectView({
           </GlassCard>
         )}
 
-        <NoDownloadsNote className="mt-8 justify-center" />
+        {admin && <NoDownloadsNote className="mt-8 justify-center" />}
       </div>
 
-      <PdfViewer doc={doc} project={project} watermark={watermark} onClose={() => setDoc(null)} />
+      <PdfViewer doc={doc} project={project} watermark={watermark} discreet={!admin} onClose={() => setDoc(null)} />
 
       {admin && (
         <Modal
@@ -171,7 +159,7 @@ export function ProjectView({
   );
 }
 
-function PdfCard({ doc, project, index, onOpen, showHidden }: { doc: PdfDoc; project: Project; index: number; onOpen: () => void; showHidden: boolean }) {
+function PdfCard({ doc, project, index, onOpen, admin }: { doc: PdfDoc; project: Project; index: number; onOpen: () => void; admin: boolean }) {
   const { from, via, to } = project.palette;
   return (
     <GlassCard
@@ -195,13 +183,14 @@ function PdfCard({ doc, project, index, onOpen, showHidden }: { doc: PdfDoc; pro
       <div className="px-3 pt-4 pb-2">
         <div className="flex items-start justify-between gap-2">
           <h3 className="text-[16px] font-semibold tracking-tight">{doc.title}</h3>
-          {showHidden && !doc.visible ? (
-            <Badge tone="neutral" icon={<EyeOff size={11} />}>
-              Hidden
-            </Badge>
-          ) : (
-            <ViewOnlyBadge />
-          )}
+          {admin &&
+            (doc.visible ? (
+              <ViewOnlyBadge />
+            ) : (
+              <Badge tone="neutral" icon={<EyeOff size={11} />}>
+                Hidden
+              </Badge>
+            ))}
         </div>
         <div className="mt-1 text-[13px] text-ink-muted">
           {doc.pages} pages · Updated {formatRelative(doc.updatedAt)}

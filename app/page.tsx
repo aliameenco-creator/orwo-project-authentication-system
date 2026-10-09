@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Lock, ShieldCheck } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Brand } from "@/components/brand";
@@ -80,19 +80,13 @@ export default function LoginPage() {
               </div>
             </div>
           ))}
-          <div className="absolute inset-x-0 bottom-0 z-10 flex justify-center">
-            <div className="glass flex animate-fade-up items-center gap-2.5 rounded-full px-4 py-2.5 text-[13px] font-medium whitespace-nowrap [animation-delay:400ms]">
-              <ShieldCheck size={16} className="text-emerald-600" />
-              Access controlled by Orwo Family
-            </div>
-          </div>
         </div>
       </section>
 
       {/* Sign-in */}
       <section className="flex items-center justify-center px-5 py-12">
         <div className="w-full max-w-[420px] animate-fade-up">
-          <Brand tagline={false} className="mb-8" />
+          <Brand height={64} className="mb-8" />
           <h1 className="text-[40px] leading-[1.05] font-semibold tracking-[-0.035em]">
             Welcome back<span className="text-ink-muted">.</span>
           </h1>
@@ -137,12 +131,6 @@ export default function LoginPage() {
             </form>
           </div>
 
-          <p className="mt-6 flex items-center justify-center gap-2 text-xs text-ink-muted">
-            <Lock size={12} />
-            {mode === "admin"
-              ? "Owner workspace · Orwo Family"
-              : "Viewers only see projects that have been shared with them"}
-          </p>
         </div>
       </section>
     </main>

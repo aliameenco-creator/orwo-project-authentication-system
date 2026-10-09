@@ -9,7 +9,7 @@ import { PosterArt } from "./poster-art";
 import { useToast } from "./toast";
 import { EmptyState, IconButton } from "./ui";
 
-export function PosterGallery({ project, watermark }: { project: Project; watermark?: string }) {
+export function PosterGallery({ project, watermark, discreet }: { project: Project; watermark?: string; discreet?: boolean }) {
   const toast = useToast();
   const [open, setOpen] = useState<number | null>(null);
   const posters = project.posters;
@@ -29,7 +29,7 @@ export function PosterGallery({ project, watermark }: { project: Project; waterm
 
   const blockMenu = (e: React.MouseEvent) => {
     e.preventDefault();
-    toast("Saving images is disabled", "This content is view-only");
+    if (!discreet) toast("Saving images is disabled", "This content is view-only");
   };
 
   const current = open !== null ? posters[open] : null;
@@ -47,9 +47,11 @@ export function PosterGallery({ project, watermark }: { project: Project; waterm
           >
             <div className="sheen relative overflow-hidden rounded-[22px] shadow-[0_24px_48px_-24px_rgba(15,23,42,0.45)] ring-1 ring-black/[0.04] transition-transform duration-500 ease-[var(--ease-glass)] group-hover:-translate-y-1">
               <PosterArt title={project.title} palette={project.palette} variant={poster.variant} className="aspect-[2/3]" />
-              <div className="absolute top-3 left-3">
-                <ViewOnlyBadge dark />
-              </div>
+              {!discreet && (
+                <div className="absolute top-3 left-3">
+                  <ViewOnlyBadge dark />
+                </div>
+              )}
               <span className="absolute right-3 bottom-3 grid h-8 w-8 place-items-center rounded-full bg-black/40 text-white opacity-0 backdrop-blur-md transition group-hover:opacity-100">
                 <Maximize size={14} />
               </span>
@@ -64,10 +66,14 @@ export function PosterGallery({ project, watermark }: { project: Project; waterm
           <div className="protected fixed inset-0 z-[60] flex animate-fade-in flex-col bg-[#eef0f4]/85 backdrop-blur-2xl print:hidden" onContextMenu={blockMenu}>
             <div className="flex items-center justify-between gap-3 p-4">
               <div className="flex items-center gap-2">
-                <ViewOnlyBadge />
-                <span className="hidden sm:inline-flex">
-                  <ProtectedBadge />
-                </span>
+                {!discreet && (
+                  <>
+                    <ViewOnlyBadge />
+                    <span className="hidden sm:inline-flex">
+                      <ProtectedBadge />
+                    </span>
+                  </>
+                )}
               </div>
               <div className="truncate text-sm font-medium">
                 {current.title} <span className="text-ink-muted">· {open! + 1} of {posters.length}</span>
@@ -82,7 +88,7 @@ export function PosterGallery({ project, watermark }: { project: Project; waterm
                 {watermark && (
                   <div className="pointer-events-none absolute inset-0 grid place-items-center">
                     <span className="rotate-[-30deg] text-sm font-semibold tracking-wider whitespace-nowrap text-white/15">
-                      {watermark} · View only
+                      {watermark}
                     </span>
                   </div>
                 )}

@@ -9,7 +9,7 @@ import { PosterArt } from "./poster-art";
 import { EmptyState } from "./ui";
 
 /** Simulated streaming player — playback is a timer over generated key art; there is no media file to save. */
-export function TrailerPlayer({ project, watermark }: { project: Project; watermark?: string }) {
+export function TrailerPlayer({ project, watermark, discreet }: { project: Project; watermark?: string; discreet?: boolean }) {
   const [index, setIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [time, setTime] = useState(0);
@@ -58,12 +58,14 @@ export function TrailerPlayer({ project, watermark }: { project: Project; waterm
         </div>
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20" />
 
-        <div className="absolute top-4 left-4 flex gap-2">
-          <ProtectedBadge dark />
-          <span className="rounded-full border border-white/15 bg-black/40 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur-md">
-            Streaming · No download
-          </span>
-        </div>
+        {!discreet && (
+          <div className="absolute top-4 left-4 flex gap-2">
+            <ProtectedBadge dark />
+            <span className="rounded-full border border-white/15 bg-black/40 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur-md">
+              Streaming · No download
+            </span>
+          </div>
+        )}
         {watermark && <div className="absolute top-4 right-4 text-[11px] font-medium text-white/40">{watermark}</div>}
 
         {!playing && (

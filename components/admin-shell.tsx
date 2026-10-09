@@ -80,7 +80,7 @@ function Sidebar() {
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-[264px] p-4 lg:block">
       <div className="glass flex h-full flex-col rounded-[28px] p-4">
         <Link href="/dashboard" className="px-2 pt-2 pb-6">
-          <Brand />
+          <Brand tagline="Create and manage our projects privately" />
         </Link>
 
         <nav className="flex flex-col gap-1">

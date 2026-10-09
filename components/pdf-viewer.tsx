@@ -19,11 +19,14 @@ export function PdfViewer({
   doc,
   project,
   watermark,
+  discreet,
   onClose,
 }: {
   doc: PdfDoc | null;
   project: Project;
   watermark?: string;
+  /** Viewer mode: no protection badges or "view-only" messaging; blocking stays silent. */
+  discreet?: boolean;
   onClose: () => void;
 }) {
   const toast = useToast();
@@ -38,7 +41,7 @@ export function PdfViewer({
       if (e.key === "Escape") onClose();
       if ((e.ctrlKey || e.metaKey) && ["s", "p"].includes(e.key.toLowerCase())) {
         e.preventDefault();
-        toast("Saving and printing are disabled", "This content is view-only");
+        if (!discreet) toast("Saving and printing are disabled", "This content is view-only");
       }
     };
     document.addEventListener("keydown", onKey);
@@ -48,7 +51,7 @@ export function PdfViewer({
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = prev;
     };
-  }, [doc, onClose, toast]);
+  }, [doc, onClose, toast, discreet]);
 
   // Track the page currently in view.
   useEffect(() => {
@@ -79,7 +82,7 @@ export function PdfViewer({
       className="protected fixed inset-0 z-[60] flex animate-fade-in flex-col bg-[#eef0f4]/80 backdrop-blur-2xl print:hidden"
       onContextMenu={(e) => {
         e.preventDefault();
-        toast("Right-click is disabled", "This content is view-only");
+        if (!discreet) toast("Right-click is disabled", "This content is view-only");
       }}
     >
       {/* Toolbar */}
@@ -92,10 +95,12 @@ export function PdfViewer({
             <div className="truncate text-[14px] font-semibold">{doc.title}</div>
             <div className="truncate text-[11.5px] text-ink-muted">{project.title}</div>
           </div>
-          <div className="hidden items-center gap-1.5 md:flex">
-            <ViewOnlyBadge />
-            <ProtectedBadge />
-          </div>
+          {!discreet && (
+            <div className="hidden items-center gap-1.5 md:flex">
+              <ViewOnlyBadge />
+              <ProtectedBadge />
+            </div>
+          )}
           <div className="hidden items-center rounded-full bg-black/[0.04] p-0.5 sm:flex">
             <IconButton label="Zoom out" className="h-8 w-8" onClick={() => setZoom((z) => Math.max(0, z - 1))} disabled={zoom === 0}>
               <Minus size={15} />
@@ -153,7 +158,13 @@ export function PdfViewer({
               </div>
             ))}
             <p className="flex items-center justify-center gap-2 pt-2 pb-10 text-xs text-ink-muted">
-              <Lock size={12} /> End of document · This content is view-only · Access controlled by Orwo Family
+              {discreet ? (
+                "End of document"
+              ) : (
+                <>
+                  <Lock size={12} /> End of document · This content is view-only · Access controlled by Orwo Family
+                </>
+              )}
             </p>
           </div>
         </div>
@@ -173,7 +184,7 @@ function Watermark({ text }: { text: string }) {
           <div key={row} className="flex justify-around gap-16 whitespace-nowrap" style={{ marginLeft: row % 2 ? 80 : 0 }}>
             {Array.from({ length: 5 }).map((_, i) => (
               <span key={i} className="text-[13px] font-semibold tracking-wide text-black/[0.07]">
-                {text} · View only
+                {text}
               </span>
             ))}
           </div>
