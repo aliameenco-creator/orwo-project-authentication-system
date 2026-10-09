@@ -3,7 +3,7 @@
 ## BUILD STATUS (keep this section updated — resume from "NEXT UP")
 
 **Stack:** Next.js (App Router) + React + TypeScript + Tailwind CSS v4 + lucide-react. Mock data only, client-side store (React context + localStorage).
-**Run:** `npm install` then `npm run dev` → http://localhost:3000
+**Run:** `npm install` then `npm run dev`. Viewer sign-in at http://localhost:3000/ (sarah.chen@northlightfilms.com / screening); owner at http://localhost:3000/owner (jake@orwo.family / any password).
 
 ### Progress
 - [x] 0. Project scaffold (package.json, tsconfig, Tailwind, layout, glass design tokens)
@@ -25,7 +25,17 @@
 - Real Orwo Family logo: `public/orwo-logo-black.png` (light UI) and `public/orwo-logo-white.png` (dark surfaces), generated from the supplied white-on-transparent webp. `app/icon.png` is the favicon. `components/brand.tsx` exports `Logo`, `LogoMark`, `Brand`.
 - The tagline "Create and manage our projects privately" only appears in Jake's sidebar, never to viewers.
 
+**Round 3 (done):**
+- **Separate sign-ins.** `/` = viewer sign-in (email + password, generic "Incorrect email or password" so it never reveals who's invited). `/owner` = owner sign-in (any password in the prototype). `AdminShell` redirects to `/owner`.
+- **Invitation flow.** `/invite/[token]`: the viewer sets name + password and an account is created (`ViewerAccount` with a prototype FNV hash, never the plain password). After that the link shows "You're already set up"; once access expires or is revoked it shows "This link has expired". After sending, `InviteForm` shows the invitation link and the sign-in link with Copy buttons. The access list shows Joined / Invite pending, and Copy Link copies the invite link or the sign-in link to match.
+- **Full film (screener).** `Project.film` (upload, or a private link such as Vimeo/Mux/Frame.io). `AccessGrant.includeFilm` is opt-in per invite. Viewers see the Film tab only with a live grant that has `includeFilm`. `components/film-player.tsx` is a simulated player with the viewer's email drifting across the frame. The owner Film tab also shows the source and "Who can watch".
+- **Real PDF → pages, two routes:** (1) server-style `scripts/convert-pdf.py` (PyMuPDF) → `public/demo-pages/<slug>/page-NN.jpg` + manifest (the demo project "Céline — Paris" uses `source: "static"`); (2) in-browser `lib/pdf-convert.ts` (pdf.js, worker copied to `/public` by postinstall) → IndexedDB (`lib/page-store.ts`), `source: "upload"`, with live "Converting page X of Y". `PdfViewer` renders real images when present (`usePageImages`).
+- The supplied deck `CÉLINE — PARIS.pdf` (35 MB → 14 JPEGs, 2.1 MB) stays local: `*.pdf` and `public/demo-pages/` are git-ignored. On a fresh clone, run the convert script or the Céline project falls back to generated art and "Page unavailable".
+- Store key bumped to `orwo-family:v2` (shape changed).
+
 Possible next steps (not started; pick up here if continuing):
+- Phase 2 backend: real auth (email invite tokens with expiry, hashed passwords, password reset), private storage, server-side page rendering with burned-in watermark, signed URLs, DRM video (Mux / Cloudflare Stream).
+- Real poster/trailer images (currently generated art).
 - **Real PDF → pages.** Recommended production approach: on upload, the server rasterises each page to an image (pdftoppm/Poppler, MuPDF or Ghostscript, typically in a background job). The images are stored privately, the original PDF is never sent to the browser, and pages are served through short-lived signed URLs, optionally with the viewer's email watermark burned in server-side. Prototype option: render the uploaded PDF in the browser with `pdfjs-dist` to real page images so the demo shows the actual document.
 - Real poster/trailer previews: keep the uploaded image as an object URL / base64 in the store instead of generated art.
 - Persist Settings (name, protection toggles, default duration) in the store; make InviteForm use the default duration.
@@ -38,7 +48,7 @@ Possible next steps (not started; pick up here if continuing):
 - All state lives in `lib/store.tsx` (React context, persisted to localStorage key `orwo-family:v1`). Children render only after hydration to avoid SSR mismatches. "Reset demo data" will live in Settings.
 - Mock dates are relative to "now" (`daysFromNow`) so "expires in 2 days" always reads correctly on first load.
 - Posters are generated art (`components/poster-art.tsx`), not image files.
-- Login: "Owner" tab (any password) → /dashboard; "Invited viewer" tab → only emails with a grant → /viewer. Demo viewer: sarah.chen@northlightfilms.com.
+- (Superseded in round 3: the login is now split into `/` for viewers and `/owner` for the owner.)
 - `ProjectView`, `PdfViewer`, `PosterGallery` and `TrailerPlayer` take `discreet` (= viewer mode) to hide all protection messaging.
 - Owner can "Preview viewer portal" (session.preview = true) and return to owner view. `app/viewer/layout.tsx` uses a `leaving` ref so its guard doesn't hijack the "Return to owner view" redirect.
 - Animations use `animation-fill-mode: backwards` (not `both`). `both` keeps `transform` set after the animation and breaks hover lifts and positioned transforms.
@@ -47,7 +57,7 @@ Possible next steps (not started; pick up here if continuing):
 - `PosterArt` is `relative` itself. To fill a box, wrap it in an absolutely positioned div and pass `h-full w-full`.
 
 ### File map
-- `app/page.tsx` login · `app/(admin)/*` owner pages (guarded by `components/admin-shell.tsx`): dashboard, projects, projects/new, projects/[id], projects/[id]/edit, access, viewers, settings
+- `app/page.tsx` viewer sign-in · `app/owner/page.tsx` owner sign-in · `app/invite/[token]/page.tsx` accept invite · `app/(admin)/*` owner pages (guarded by `components/admin-shell.tsx`): dashboard, projects, projects/new, projects/[id], projects/[id]/edit, access, viewers, settings
 - `app/viewer/layout.tsx` (viewer guard + preview banner), `app/viewer/page.tsx` (shared projects + "Access ended"), `app/viewer/[id]/page.tsx` (blocks expired/revoked/unshared)
 - `components/ui.tsx` Button/Badge/GlassCard/Field/Toggle/Segmented/Avatar/Modal/PageHeader/EmptyState
 - `components/badges.tsx` status + View Only / Protected badges · `components/project-card.tsx` · `components/projects-browser.tsx`

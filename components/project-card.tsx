@@ -6,7 +6,7 @@ import type { ReactNode } from "react";
 import type { Project } from "@/lib/types";
 import { cn, formatRelative } from "@/lib/utils";
 import { ProjectStatusBadge } from "./badges";
-import { PosterArt } from "./poster-art";
+import { ProjectCover } from "./project-cover";
 import { buttonClass } from "./ui";
 
 export function ProjectCard({
@@ -35,10 +35,8 @@ export function ProjectCard({
       style={{ animationDelay: `${index * 70}ms` }}
     >
       <Link href={href} className="sheen relative block overflow-hidden rounded-[22px]">
-        <PosterArt
-          title={project.title}
-          palette={project.palette}
-          variant={project.posters[0]?.variant ?? 0}
+        <ProjectCover
+          project={project}
           compact
           className="aspect-[4/3] transition-transform duration-700 ease-[var(--ease-glass)] group-hover:scale-[1.04]"
         />

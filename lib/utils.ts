@@ -79,8 +79,38 @@ export function nameFromEmail(email: string) {
     .join(" ");
 }
 
-export function accessLink(token: string) {
-  return `https://orwo.family/v/${token}`;
+function origin() {
+  return typeof window !== "undefined" ? window.location.origin : "https://orwo.family";
+}
+
+/** One-time link where an invited viewer creates their own password. */
+export function inviteLink(token: string) {
+  return `${origin()}/invite/${token}`;
+}
+
+/** Where viewers sign in after they've set up their account. */
+export function viewerSignInLink() {
+  return `${origin()}/`;
+}
+
+/**
+ * Prototype-only password hash (FNV-1a, salted with the email) so plain passwords never sit in storage.
+ * A real backend would use bcrypt/argon2 server-side.
+ */
+export function hashPassword(email: string, password: string) {
+  let h = 0x811c9dc5;
+  for (const c of `${email.toLowerCase()}::${password}`) {
+    h ^= c.charCodeAt(0);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h.toString(16).padStart(8, "0");
+}
+
+export function formatRuntime(seconds: number) {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = Math.floor(seconds % 60);
+  return h ? `${h}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}` : formatDuration(seconds);
 }
 
 /** Best grant per project for a viewer — live grants win, then the latest expiry. */

@@ -1,11 +1,11 @@
 "use client";
 
-import { Ban, CalendarPlus, Eye, Link as LinkIcon, RotateCcw, UserRound } from "lucide-react";
+import { Ban, CalendarPlus, Eye, Film, Link as LinkIcon, RotateCcw, UserRound } from "lucide-react";
 import { useState } from "react";
 import { usePreviewAs } from "./admin-shell";
 import { useStore } from "@/lib/store";
 import type { AccessGrant } from "@/lib/types";
-import { accessLink, cn, daysUntil, formatDate, grantStatus } from "@/lib/utils";
+import { cn, daysUntil, formatDate, grantStatus, inviteLink, viewerSignInLink } from "@/lib/utils";
 import { GrantStatusBadge } from "./badges";
 import { DurationPicker } from "./duration-picker";
 import { useToast } from "./toast";
@@ -13,7 +13,7 @@ import { Avatar, Button, EmptyState, IconButton, Modal } from "./ui";
 
 /** Viewer access rows with Extend / Revoke / Copy Link. Table on desktop, cards on mobile. */
 export function AccessList({ grants, showPreview }: { grants: AccessGrant[]; showPreview?: boolean }) {
-  const { projects, extendGrant, revokeGrant, reinstateGrant } = useStore();
+  const { projects, extendGrant, revokeGrant, reinstateGrant, hasAccount } = useStore();
   const toast = useToast();
   const previewAs = usePreviewAs();
   const [extending, setExtending] = useState<AccessGrant | null>(null);
@@ -25,14 +25,24 @@ export function AccessList({ grants, showPreview }: { grants: AccessGrant[]; sho
   if (!grants.length)
     return <EmptyState icon={<UserRound size={22} />} title="No viewers yet" body="Invite someone by email to give them time-limited, view-only access." />;
 
+  // Not signed up yet → their one-time invitation link; otherwise the normal sign-in page.
   async function copy(g: AccessGrant) {
+    const joined = hasAccount(g.email);
+    const link = joined ? viewerSignInLink() : inviteLink(g.token);
     try {
-      await navigator.clipboard.writeText(accessLink(g.token));
+      await navigator.clipboard.writeText(link);
     } catch {
       /* clipboard unavailable — still show the link */
     }
-    toast("Access link copied", accessLink(g.token));
+    toast(joined ? "Sign-in link copied" : "Invitation link copied", link);
   }
+
+  const accountState = (g: AccessGrant) =>
+    hasAccount(g.email) ? (
+      <span className="text-[11px] text-emerald-600">Joined</span>
+    ) : (
+      <span className="text-[11px] text-amber-600">Invite pending</span>
+    );
 
   const actions = (g: AccessGrant) => {
     const s = grantStatus(g);
@@ -60,7 +70,7 @@ export function AccessList({ grants, showPreview }: { grants: AccessGrant[]; sho
             <Ban size={13} /> Revoke
           </Button>
         )}
-        <IconButton label="Copy link" onClick={() => copy(g)} disabled={dead} className="disabled:opacity-30">
+        <IconButton label={hasAccount(g.email) ? "Copy sign-in link" : "Copy invitation link"} onClick={() => copy(g)} disabled={dead} className="disabled:opacity-30">
           <LinkIcon size={15} />
         </IconButton>
       </div>
@@ -74,6 +84,11 @@ export function AccessList({ grants, showPreview }: { grants: AccessGrant[]; sho
           {projectName(id)}
         </span>
       ))}
+      {g.includeFilm && (
+        <span className="inline-flex items-center gap-1 rounded-full bg-ink px-2 py-0.5 text-[11.5px] font-medium whitespace-nowrap text-white">
+          <Film size={11} /> Full film
+        </span>
+      )}
     </div>
   );
 
@@ -113,6 +128,7 @@ export function AccessList({ grants, showPreview }: { grants: AccessGrant[]; sho
                     <div className="min-w-0">
                       <div className="truncate text-sm font-medium">{g.name}</div>
                       <div className="truncate text-xs text-ink-muted">{g.email}</div>
+                      {accountState(g)}
                     </div>
                   </div>
                 </td>
@@ -141,6 +157,7 @@ export function AccessList({ grants, showPreview }: { grants: AccessGrant[]; sho
                   <GrantStatusBadge grant={g} />
                 </div>
                 <div className="truncate text-xs text-ink-muted">{g.email}</div>
+                {accountState(g)}
               </div>
             </div>
             <div className="mt-3">{projectChips(g)}</div>

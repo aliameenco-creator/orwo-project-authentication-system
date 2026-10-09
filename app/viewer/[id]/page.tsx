@@ -28,5 +28,8 @@ export default function ViewerProjectPage() {
       </GlassCard>
     );
 
-  return <ProjectView project={project} mode="viewer" backHref="/viewer" watermark={session.email} />;
+  // The full film needs a live grant for this project that explicitly includes it.
+  const canWatchFilm = grants.some((g) => g.email === session.email && g.projectIds.includes(project.id) && g.includeFilm && isGrantLive(g));
+
+  return <ProjectView project={project} mode="viewer" backHref="/viewer" watermark={session.email} canWatchFilm={canWatchFilm} />;
 }

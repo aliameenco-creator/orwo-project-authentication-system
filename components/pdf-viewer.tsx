@@ -4,12 +4,37 @@ import { ChevronLeft, Lock, Minus, Plus, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import type { PdfDoc, Project } from "@/lib/types";
+import { loadPages } from "@/lib/page-store";
 import { cn } from "@/lib/utils";
 import { ProtectedBadge, ViewOnlyBadge } from "./badges";
 import { useToast } from "./toast";
 import { IconButton } from "./ui";
 
 const ZOOMS = [640, 820, 1020];
+
+/** Image URL per page for converted PDFs; null for generated mock pages. */
+export function usePageImages(doc: PdfDoc | null) {
+  const [uploaded, setUploaded] = useState<{ id: string; pages: string[] } | null>(null);
+  const id = doc?.id;
+  const source = doc?.source;
+
+  useEffect(() => {
+    if (!id || source !== "upload") return;
+    let alive = true;
+    loadPages(id)
+      .then((pages) => alive && setUploaded({ id, pages: pages ?? [] }))
+      .catch(() => alive && setUploaded({ id, pages: [] }));
+    return () => {
+      alive = false;
+    };
+  }, [id, source]);
+
+  if (!doc) return null;
+  if (doc.source === "static" && doc.pagesPath)
+    return Array.from({ length: doc.pages }, (_, i) => `${doc.pagesPath}/page-${String(i + 1).padStart(2, "0")}.jpg`);
+  if (doc.source === "upload") return uploaded?.id === doc.id ? uploaded.pages : [];
+  return null;
+}
 
 /**
  * In-page document viewer. Pages are rendered as styled blocks (no real file is ever sent to the browser),
@@ -33,6 +58,7 @@ export function PdfViewer({
   const [page, setPage] = useState(1);
   const [zoom, setZoom] = useState(1);
   const scroller = useRef<HTMLDivElement>(null);
+  const images = usePageImages(doc);
 
   // Block the usual "save a copy" shortcuts while the viewer is open.
   useEffect(() => {
@@ -67,7 +93,7 @@ export function PdfViewer({
     );
     root.querySelectorAll("[data-page]").forEach((el) => io.observe(el));
     return () => io.disconnect();
-  }, [doc, zoom]);
+  }, [doc, zoom, images?.length]);
 
   const jump = useCallback((n: number) => {
     scroller.current?.querySelector(`[data-page="${n}"]`)?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -76,6 +102,10 @@ export function PdfViewer({
   if (!doc) return null;
   const pages = Array.from({ length: doc.pages }, (_, i) => i + 1);
   const isDeck = doc.format === "deck";
+  const real = images !== null;
+  // Real pages use their own proportions; mock pages use deck / A4 shapes.
+  const ratio = real ? (doc.aspect ?? 16 / 9) : isDeck ? 16 / 9 : 1 / 1.414;
+  const width = ratio >= 1 ? ZOOMS[zoom]! : ZOOMS[zoom]! * 0.78;
 
   return createPortal(
     <div
@@ -132,8 +162,8 @@ export function PdfViewer({
                 n === page ? "ring-accent shadow-md" : "ring-transparent opacity-70 hover:opacity-100",
               )}
             >
-              <div className={cn("relative", isDeck ? "aspect-video" : "aspect-[1/1.414]")}>
-                <Thumb n={n} project={project} isDeck={isDeck} />
+              <div className="relative" style={{ aspectRatio: ratio }}>
+                {real ? <PageImage src={images[n - 1]} /> : <Thumb n={n} project={project} isDeck={isDeck} />}
               </div>
               <div className="py-1 text-center text-[10px] text-ink-muted">{n}</div>
             </button>
@@ -142,17 +172,21 @@ export function PdfViewer({
 
         {/* Pages */}
         <div ref={scroller} className="flex-1 overflow-y-auto px-4 py-6 sm:px-8">
-          <div className="mx-auto space-y-6" style={{ maxWidth: isDeck ? ZOOMS[zoom] : ZOOMS[zoom] * 0.78 }}>
+          <div className="mx-auto space-y-6" style={{ maxWidth: width }}>
             {pages.map((n) => (
               <div
                 key={n}
                 data-page={n}
-                className={cn(
-                  "relative scroll-mt-4 overflow-hidden rounded-xl bg-white [container-type:inline-size] shadow-[0_20px_50px_-20px_rgba(15,23,42,0.25)] ring-1 ring-black/[0.04]",
-                  isDeck ? "aspect-video" : "aspect-[1/1.414]",
-                )}
+                className="relative scroll-mt-4 overflow-hidden rounded-xl bg-white [container-type:inline-size] shadow-[0_20px_50px_-20px_rgba(15,23,42,0.25)] ring-1 ring-black/[0.04]"
+                style={{ aspectRatio: ratio }}
               >
-                {isDeck ? <DeckPage n={n} doc={doc} project={project} /> : <DocPage n={n} doc={doc} project={project} />}
+                {real ? (
+                  <PageImage src={images[n - 1]} eager={n <= 2} />
+                ) : isDeck ? (
+                  <DeckPage n={n} doc={doc} project={project} />
+                ) : (
+                  <DocPage n={n} doc={doc} project={project} />
+                )}
                 {watermark && <Watermark text={watermark} />}
                 <span className="absolute right-4 bottom-3 text-[10px] text-black/30 mix-blend-difference">{n}</span>
               </div>
@@ -171,6 +205,26 @@ export function PdfViewer({
       </div>
     </div>,
     document.body,
+  );
+}
+
+/* ---------- Real page image ---------- */
+
+function PageImage({ src, eager }: { src?: string; eager?: boolean }) {
+  const [failed, setFailed] = useState(false);
+  if (!src) return <div className="absolute inset-0 animate-pulse bg-black/[0.04]" />;
+  if (failed)
+    return <div className="absolute inset-0 grid place-items-center bg-black/[0.03] text-[11px] text-ink-muted">Page unavailable</div>;
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={src}
+      alt=""
+      loading={eager ? "eager" : "lazy"}
+      draggable={false}
+      className="pointer-events-none absolute inset-0 h-full w-full object-contain select-none"
+      onError={() => setFailed(true)}
+    />
   );
 }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { Ban, Clock, Link as LinkIcon, Mail, ShieldCheck } from "lucide-react";
+import { Ban, Clock, KeyRound, Link as LinkIcon, Mail, ShieldCheck } from "lucide-react";
 import { useMemo, useState, type ReactNode } from "react";
 import { AccessList } from "@/components/access-list";
 import { InviteForm } from "@/components/invite-form";
@@ -34,13 +34,16 @@ export default function AccessPage() {
           <h2 className="mb-6 text-xl font-semibold tracking-[-0.02em]">How access works</h2>
           <ol className="relative space-y-6">
             <Step icon={<Mail size={16} />} title="Invite by email">
-              Choose the projects and how long they can view them — 1, 3, 7 days or a custom period.
+              Choose the projects, whether to include the full film, and how long — 1, 3, 7 days or custom.
             </Step>
-            <Step icon={<LinkIcon size={16} />} title="Private link">
-              The viewer signs in with their email. They only see what you&apos;ve shared, with no admin controls.
+            <Step icon={<LinkIcon size={16} />} title="They set their own password">
+              The email contains a one-time invitation link. They choose a password there — you never see or send it.
+            </Step>
+            <Step icon={<KeyRound size={16} />} title="Separate sign-in">
+              From then on they sign in on the viewer page. Your owner sign-in is a different address they never see.
             </Step>
             <Step icon={<ShieldCheck size={16} />} title="View only">
-              Decks open in an in-browser viewer watermarked with their email. Posters and trailers stream — nothing to download.
+              Decks show as page images with their email on them. Posters, trailers and the film stream — nothing to download.
             </Step>
             <Step icon={<Clock size={16} />} title="Automatic expiry">
               When time runs out, access ends. Extend it any time, or revoke instantly.

@@ -7,6 +7,8 @@ import {
   Eye,
   EyeOff,
   FileText,
+  Film as FilmIcon,
+  Link2,
   GripVertical,
   ImagePlus,
   Plus,
@@ -17,8 +19,10 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { PALETTE_PRESETS } from "@/lib/mock-data";
 import { useStore } from "@/lib/store";
+import { savePages } from "@/lib/page-store";
+import { convertPdf } from "@/lib/pdf-convert";
 import type { Palette, PdfDoc, Poster, Project, ProjectStatus, Trailer } from "@/lib/types";
-import { cn, formatDuration, uid } from "@/lib/utils";
+import { cn, formatDuration, formatRuntime, uid } from "@/lib/utils";
 import { PdfViewer } from "./pdf-viewer";
 import { PosterArt } from "./poster-art";
 import { useToast } from "./toast";
@@ -82,7 +86,10 @@ export function ProjectForm({ initial }: { initial?: Project }) {
   }, [uploading]);
 
   const startUpload = (ids: string[]) => setProgress((prev) => ({ ...prev, ...Object.fromEntries(ids.map((id) => [id, 0])) }));
-  const isUploading = (id: string) => (progress[id] ?? 100) < 100;
+  // Real PDF → page-image conversion progress, per PDF.
+  const [converting, setConverting] = useState<Record<string, { done: number; total: number }>>({});
+  const isUploading = (id: string) => (progress[id] ?? 100) < 100 || id in converting;
+  const busy = uploading || Object.keys(converting).length > 0;
 
   /* ---------- Materials ---------- */
 
@@ -100,7 +107,36 @@ export function ProjectForm({ initial }: { initial?: Project }) {
   }
 
   function updatePdf(id: string, patch: Partial<PdfDoc>) {
-    set("pdfs", p.pdfs.map((d) => (d.id === id ? { ...d, ...patch } : d)));
+    setP((prev) => ({ ...prev, pdfs: prev.pdfs.map((d) => (d.id === id ? { ...d, ...patch } : d)) }));
+  }
+
+  /** Real uploads: render every page to an image with pdf.js, one file at a time. */
+  async function addPdfFiles(files: File[]) {
+    const docs: PdfDoc[] = files.map((f) => ({
+      id: uid("pdf"),
+      title: titleFromFile(f.name),
+      pages: 0,
+      format: "deck",
+      updatedAt: new Date().toISOString(),
+      visible: true,
+      source: "upload",
+    }));
+    setP((prev) => ({ ...prev, pdfs: [...prev.pdfs, ...docs] }));
+    setConverting((prev) => ({ ...prev, ...Object.fromEntries(docs.map((d) => [d.id, { done: 0, total: 0 }])) }));
+
+    for (const [i, doc] of docs.entries()) {
+      try {
+        const out = await convertPdf(files[i]!, (done, total) => setConverting((prev) => ({ ...prev, [doc.id]: { done, total } })));
+        await savePages(doc.id, out.pages);
+        updatePdf(doc.id, { pages: out.pages.length, aspect: out.aspect, format: out.aspect >= 1 ? "deck" : "document" });
+        toast("PDF converted", `${doc.title} · ${out.pages.length} pages`);
+      } catch {
+        setP((prev) => ({ ...prev, pdfs: prev.pdfs.filter((d) => d.id !== doc.id) }));
+        toast("Couldn't read that PDF", files[i]!.name);
+      } finally {
+        setConverting(({ [doc.id]: _, ...rest }) => rest);
+      }
+    }
   }
 
   // Reorder by dragging the handle.
@@ -132,6 +168,23 @@ export function ProjectForm({ initial }: { initial?: Project }) {
     const trailers: Trailer[] = files.map((f) => ({ id: uid("trailer"), title: titleFromFile(f.name), duration: 60 + Math.floor(Math.random() * 120) }));
     set("trailers", [...p.trailers, ...trailers]);
     startUpload(trailers.map((t) => t.id));
+  }
+
+  /* ---------- Full film ---------- */
+
+  const [filmLink, setFilmLink] = useState("");
+  const filmTitle = () => `${p.title.trim() || "Untitled"} — Feature`;
+
+  function addFilmFile(files: File[]) {
+    const f = files[0]!;
+    set("film", { title: filmTitle(), duration: 5400 + Math.floor(Math.random() * 2400), source: "upload", fileName: f.name });
+    startUpload(["film"]);
+  }
+
+  function addFilmLink() {
+    if (!/^https?:\/\/\S+$/.test(filmLink.trim())) return toast("Paste a full https:// link");
+    set("film", { title: filmTitle(), duration: 6000, source: "link", url: filmLink.trim() });
+    setFilmLink("");
   }
 
   /* ---------- Save ---------- */
@@ -176,7 +229,7 @@ export function ProjectForm({ initial }: { initial?: Project }) {
           <ButtonLink href={cancelHref} variant="secondary">
             Cancel
           </ButtonLink>
-          <Button onClick={save} disabled={uploading}>
+          <Button onClick={save} disabled={busy}>
             <Check size={16} /> {isEdit ? "Save Changes" : "Create Project"}
           </Button>
         </div>
@@ -325,6 +378,59 @@ export function ProjectForm({ initial }: { initial?: Project }) {
             </div>
           </Section>
 
+          {/* Full film */}
+          <Section title="Full film" subtitle="The complete cut. Only viewers you explicitly include can watch it.">
+            {p.film ? (
+              <div className="flex items-center gap-3 rounded-2xl bg-white/75 p-3 ring-1 ring-black/[0.04]">
+                <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-ink text-white">
+                  {p.film.source === "link" ? <Link2 size={18} /> : <FilmIcon size={18} />}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <input
+                    value={p.film.title}
+                    onChange={(e) => set("film", { ...p.film!, title: e.target.value })}
+                    className="w-full rounded-lg bg-transparent px-1 py-0.5 text-sm font-medium outline-none focus:bg-white focus:ring-2 focus:ring-accent/15"
+                    aria-label="Film title"
+                  />
+                  {isUploading("film") ? (
+                    <div className="mt-1.5 px-1">
+                      <ProgressBar value={progress.film!} />
+                    </div>
+                  ) : (
+                    <div className="truncate px-1 text-xs text-ink-muted">
+                      {p.film.source === "link" ? p.film.url : p.film.fileName} · {formatRuntime(p.film.duration)} · Stream only
+                    </div>
+                  )}
+                </div>
+                <IconButton label="Remove film" onClick={() => set("film", undefined)} className="hover:text-red-600">
+                  <Trash size={15} />
+                </IconButton>
+              </div>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2">
+                <UploadDrop accept="video/*" onFiles={addFilmFile} icon={<FilmIcon size={18} />} title="Upload the film" hint="MP4 / MOV master · streamed, never downloadable" />
+                <div className="flex flex-col justify-center rounded-3xl bg-white/40 p-5 ring-1 ring-black/[0.05]">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <Link2 size={16} /> Or use a private link
+                  </div>
+                  <p className="mt-1 text-xs text-ink-muted">Vimeo, Mux, Frame.io… The link stays hidden from viewers.</p>
+                  <div className="mt-3 flex gap-2">
+                    <Input
+                      value={filmLink}
+                      onChange={(e) => setFilmLink(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addFilmLink())}
+                      placeholder="https://vimeo.com/…"
+                      className="h-10 text-sm"
+                    />
+                    <Button size="sm" className="h-10" onClick={addFilmLink}>
+                      Add
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </Section>
+
           {/* Materials */}
           <Section
             title="Project materials"
@@ -370,13 +476,21 @@ export function ProjectForm({ initial }: { initial?: Project }) {
                       className="w-full truncate rounded-lg bg-transparent px-1 py-0.5 text-sm font-medium outline-none focus:bg-white focus:ring-2 focus:ring-accent/15"
                       aria-label="PDF title"
                     />
-                    {isUploading(d.id) ? (
+                    {converting[d.id] ? (
+                      <div className="mt-1.5 space-y-1 px-1">
+                        <ProgressBar value={converting[d.id]!.total ? (converting[d.id]!.done / converting[d.id]!.total) * 100 : 3} />
+                        <div className="text-[11px] text-ink-muted">
+                          {converting[d.id]!.total ? `Converting page ${converting[d.id]!.done} of ${converting[d.id]!.total}…` : "Reading PDF…"}
+                        </div>
+                      </div>
+                    ) : isUploading(d.id) ? (
                       <div className="mt-1.5 px-1">
                         <ProgressBar value={progress[d.id]!} />
                       </div>
                     ) : (
                       <div className="px-1 text-xs text-ink-muted">
                         {d.pages} pages · {d.format === "deck" ? "Presentation" : "Document"}
+                        {d.source === "upload" || d.source === "static" ? " · Real pages" : " · Sample"}
                         {!d.visible && " · Hidden from viewers"}
                       </div>
                     )}
@@ -404,14 +518,14 @@ export function ProjectForm({ initial }: { initial?: Project }) {
               <UploadDrop
                 accept="application/pdf"
                 multiple
-                onFiles={(files) => addPdfs(files.map((f) => titleFromFile(f.name)))}
+                onFiles={addPdfFiles}
                 icon={<FileText size={18} />}
                 title="Upload PDFs"
-                hint="Select multiple files · converted to protected web pages"
+                hint="Select multiple files · each page is converted to an image"
                 compact={p.pdfs.length > 0}
               />
               <div className="mt-3 flex flex-wrap items-center gap-2">
-                <span className="text-xs text-ink-muted">No files handy?</span>
+                <span className="text-xs text-ink-muted">No files handy? Add a sample:</span>
                 {SAMPLE_PDFS.filter((t) => !p.pdfs.some((d) => d.title === t))
                   .slice(0, 3)
                   .map((t) => (
@@ -450,7 +564,7 @@ export function ProjectForm({ initial }: { initial?: Project }) {
               </div>
             </GlassCard>
             <p className="px-1 text-xs leading-relaxed text-ink-muted">
-              Prototype uploader — files stay on your device and are represented with generated previews.
+              PDFs are converted to real page images in your browser. Posters, trailers and the film are represented with generated previews in this prototype.
             </p>
           </div>
         </aside>

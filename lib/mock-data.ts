@@ -1,16 +1,45 @@
-import type { AccessGrant, Project } from "./types";
-import { daysFromNow } from "./utils";
+import type { AccessGrant, Project, ViewerAccount } from "./types";
+import { daysFromNow, hashPassword } from "./utils";
 
 export const ADMIN = {
   email: "jake@orwo.family",
   name: "Jake Orwo",
 };
 
-/** Default viewer used for the "Viewer demo" sign-in shortcut. */
+/** Demo viewer who has already accepted her invitation. */
 export const DEMO_VIEWER_EMAIL = "sarah.chen@northlightfilms.com";
+export const DEMO_VIEWER_PASSWORD = "screening";
 
 export function createMockProjects(): Project[] {
   return [
+    {
+      id: "celine-paris",
+      title: "Céline — Paris",
+      description: "A 360° immersive cultural installation celebrating Céline Dion's story, launching in Paris.",
+      summary:
+        "Not a room full of costumes and gold records, but a living cultural installation about what happens when a voice becomes part of public memory. Ten immersive rooms trace the journey from Charlemagne to Las Vegas and back to Paris — timed to her May 2027 Paris performances, with a touring version to follow.",
+      genre: "Immersive Installation",
+      year: 2027,
+      status: "Active",
+      palette: { from: "#3a2a12", via: "#b8893a", to: "#f3e6c8", glow: "#d8b26a" },
+      cover: "/demo-pages/celine-paris/page-01.jpg",
+      pdfs: [
+        {
+          id: "cp-1",
+          title: "Pitch Deck",
+          pages: 14,
+          format: "deck",
+          updatedAt: daysFromNow(-4),
+          visible: true,
+          source: "static",
+          pagesPath: "/demo-pages/celine-paris",
+          aspect: 16 / 9,
+        },
+      ],
+      posters: [],
+      trailers: [],
+      updatedAt: daysFromNow(-4),
+    },
     {
       id: "echo-line",
       title: "Echo Line",
@@ -36,6 +65,7 @@ export function createMockProjects(): Project[] {
         { id: "el-t1", title: "Official Teaser", duration: 94 },
         { id: "el-t2", title: "Mood Reel", duration: 152 },
       ],
+      film: { title: "Echo Line — Festival Cut", duration: 6492, source: "upload", fileName: "EchoLine_FestivalCut_v7_ProRes.mov" },
       updatedAt: daysFromNow(-2),
     },
     {
@@ -58,6 +88,7 @@ export function createMockProjects(): Project[] {
         { id: "lh-p2", title: "Station Teaser", variant: 0 },
       ],
       trailers: [{ id: "lh-t1", title: "Announcement Trailer", duration: 131 }],
+      film: { title: "The Last Horizon — Rough Cut", duration: 7215, source: "link", url: "https://vimeo.com/private/the-last-horizon-rc2" },
       updatedAt: daysFromNow(-1),
     },
     {
@@ -107,9 +138,10 @@ export function createMockGrants(): AccessGrant[] {
   return [
     {
       id: "g1",
+      includeFilm: true,
       email: DEMO_VIEWER_EMAIL,
       name: "Sarah Chen",
-      projectIds: ["echo-line", "the-last-horizon"],
+      projectIds: ["celine-paris", "echo-line", "the-last-horizon"],
       startDate: daysFromNow(-3),
       expiryDate: daysFromNow(2),
       revoked: false,
@@ -118,6 +150,7 @@ export function createMockGrants(): AccessGrant[] {
     },
     {
       id: "g2",
+      includeFilm: false,
       email: "marcus.reid@atlasdistribution.com",
       name: "Marcus Reid",
       projectIds: ["the-last-horizon"],
@@ -128,6 +161,7 @@ export function createMockGrants(): AccessGrant[] {
     },
     {
       id: "g3",
+      includeFilm: false,
       email: "priya.nair@lumenstudios.com",
       name: "Priya Nair",
       projectIds: ["echo-line", "glass-river"],
@@ -138,6 +172,7 @@ export function createMockGrants(): AccessGrant[] {
     },
     {
       id: "g4",
+      includeFilm: true,
       email: "elena.voss@festivalcircuit.org",
       name: "Elena Voss",
       projectIds: ["echo-line", "midnight-archive"],
@@ -148,6 +183,7 @@ export function createMockGrants(): AccessGrant[] {
     },
     {
       id: "g5",
+      includeFilm: false,
       email: "james.whitaker@meridianpictures.com",
       name: "James Whitaker",
       projectIds: ["echo-line"],
@@ -166,3 +202,13 @@ export const PALETTE_PRESETS = [
   { from: "#3b0764", via: "#9333ea", to: "#f5d0fe", glow: "#c084fc" },
   { from: "#450a0a", via: "#b91c1c", to: "#fecaca", glow: "#f87171" },
 ];
+
+/** Viewers who have accepted their invitation. Priya's invite is still pending. */
+export function createMockAccounts(): ViewerAccount[] {
+  return [
+    { email: DEMO_VIEWER_EMAIL, name: "Sarah Chen", passwordHash: hashPassword(DEMO_VIEWER_EMAIL, DEMO_VIEWER_PASSWORD), createdAt: daysFromNow(-3) },
+    { email: "marcus.reid@atlasdistribution.com", name: "Marcus Reid", passwordHash: hashPassword("marcus.reid@atlasdistribution.com", DEMO_VIEWER_PASSWORD), createdAt: daysFromNow(-1) },
+    { email: "elena.voss@festivalcircuit.org", name: "Elena Voss", passwordHash: hashPassword("elena.voss@festivalcircuit.org", DEMO_VIEWER_PASSWORD), createdAt: daysFromNow(-10) },
+    { email: "james.whitaker@meridianpictures.com", name: "James Whitaker", passwordHash: hashPassword("james.whitaker@meridianpictures.com", DEMO_VIEWER_PASSWORD), createdAt: daysFromNow(-5) },
+  ];
+}

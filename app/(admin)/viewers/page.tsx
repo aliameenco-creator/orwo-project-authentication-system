@@ -10,7 +10,7 @@ import type { AccessGrant } from "@/lib/types";
 import { cn, expiryLabel, isGrantLive } from "@/lib/utils";
 
 export default function ViewersPage() {
-  const { grants, projects } = useStore();
+  const { grants, projects, hasAccount } = useStore();
   const previewAs = usePreviewAs();
   const [query, setQuery] = useState("");
 
@@ -65,8 +65,11 @@ export default function ViewersPage() {
                 <div className="min-w-0 flex-1">
                   <div className="truncate font-semibold tracking-tight">{v.name}</div>
                   <div className="truncate text-xs text-ink-muted">{v.email}</div>
-                  <div className="mt-2">
+                  <div className="mt-2 flex items-center gap-2">
                     <GrantStatusBadge grant={v.primary} />
+                    <span className={cn("text-[11px]", hasAccount(v.email) ? "text-emerald-600" : "text-amber-600")}>
+                      {hasAccount(v.email) ? "Joined" : "Invite pending"}
+                    </span>
                   </div>
                 </div>
               </div>

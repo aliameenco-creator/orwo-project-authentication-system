@@ -40,7 +40,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
-    if (!session) router.replace("/");
+    if (!session) router.replace("/owner");
     else if (session.role !== "admin") router.replace("/viewer");
   }, [session, router]);
 
@@ -212,7 +212,7 @@ function TopBar() {
                 type="button"
                 onClick={() => {
                   signOut();
-                  router.replace("/");
+                  router.replace("/owner");
                 }}
                 className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-red-600 hover:bg-red-50"
               >
