@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
     "postinstall": "node scripts/copy-pdf-worker.mjs"
   },
@@ -23,5 +23,8 @@
     "postcss": "^8.5.29",
     "tailwindcss": "^4.3.3",
     "typescript": "^5.9.3"
+  },
+  "engines": {
+    "node": ">=20.9"
   }
 }

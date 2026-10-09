@@ -48,6 +48,7 @@ Possible next steps (not started; pick up here if continuing):
 - Phase 2: real backend (auth, storage, signed URLs, server-rendered page images, video streaming/DRM).
 
 ### Notes / decisions
+- **Deploy:** `npm run build` = `next build --webpack`. Turbopack's PostCSS runs in a child Node process that some hosting build containers kill ("node process exited before we could connect to it" on globals.css). Webpack runs PostCSS in-process. Settings: Next.js preset, Node 22, build `npm run build`, output `.next`. The Céline page images are git-ignored, so on the deployed site the Céline deck shows "Page unavailable" unless `public/demo-pages/celine-paris/` is deployed.
 - No create-next-app (folder name has spaces/caps) — package.json written by hand. TypeScript pinned to 5.x (TS 7 native may not work with Next 16).
 - lucide-react v1: `Trash2` doesn't exist → use `Trash`.
 - All state lives in `lib/store.tsx` (React context, persisted to localStorage key `orwo-family:v1`). Children render only after hydration to avoid SSR mismatches. "Reset demo data" will live in Settings.
